@@ -35,7 +35,7 @@ pub fn push<T>(&mut self, elem: T) {
     self.len += 1;
 }
 
-pub fn pop<T>(&mut elf) -> Option<T> {
+pub fn pop<T>(&mut self) -> Option<T> {
     if self.len == 0 {
         None
     } else {
