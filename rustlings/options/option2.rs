@@ -16,10 +16,10 @@ mod tests {
         #[test]
         fn layered_option() {
             let range = 10;
-            let mut optional_integers: Vec<Option<i8>> = vec![None];
+            let mut optional_integers_vec: Vec<Option<i8>> = Vec::new();
 
             for i in 1..10 {
-                optional_integers.push(Some(i));
+                optional_integers_vec.push(Some(i));
             }
 
             let mut cursor = range;
