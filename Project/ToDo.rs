@@ -14,6 +14,7 @@ use druid::Env;
 use druid::widget::Checkbox;
 use druid::widget::List;
 
+
 pub fn ui_builder() -> impl Widget <TodoState>{
     let header = Flex::row()
     .with_flex_child(TextBox::new()
@@ -39,8 +40,8 @@ pub fn ui_builder() -> impl Widget <TodoState>{
 }
 
 fn main(){
-    mod ui{}
-    mod data{}
+    pub mod ui{}
+    pub mod data{}
     let main_window = WindowDesc::new(ui_builder())
         .title ("ToDo App")
         .window_size((500., 500.));
