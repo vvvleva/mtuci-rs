@@ -4,8 +4,8 @@ use druid::WindowDesc;
 use druid::AppLauncher;
 use im::Vector;
 use druid::{Data, Lens};
-use crate::data::TodoState;
-use ui::ui_builder;
+use crate::data::TodoState as OtherTodoState;
+use ui::ui_builder as other_ui_builder;
 use druid::widget::Flex;
 use druid::widget::Button;
 use druid::widget::TextBox;
@@ -14,6 +14,13 @@ use druid::Env;
 use druid::widget::Checkbox;
 use druid::widget::List;
 
+pub mod ui {
+    pub use super::*;
+}
+
+pub mod data {
+    pub use super::*;
+}
 
 pub fn ui_builder() -> impl Widget <TodoState>{
     let header = Flex::row()
