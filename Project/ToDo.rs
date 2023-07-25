@@ -4,8 +4,6 @@ use druid::WindowDesc;
 use druid::AppLauncher;
 use im::Vector;
 use druid::{Data, Lens};
-use crate::data::TodoState as OtherTodoState;
-use ui::ui_builder as other_ui_builder;
 use druid::widget::Flex;
 use druid::widget::Button;
 use druid::widget::TextBox;
@@ -51,7 +49,7 @@ fn main(){
     pub mod data{}
     let main_window = WindowDesc::new(ui_builder())
         .title ("ToDo App")
-        .window_size((500., 500.));
+        .window_size((500., 600.));
     AppLauncher::with_window(main_window)
         .launch(TodoState::default())
         .expect("Faild to start")
