@@ -20,7 +20,7 @@ pub mod data {
     pub use super::*;
 }
 
-pub fn ui_builder() -> impl Widget <TodoState>{
+pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возвращает всё, что реализует виджет Druid
     let header = Flex::row()
     .with_flex_child(TextBox::new()
         .lens(TodoState::new_text)
@@ -41,18 +41,18 @@ pub fn ui_builder() -> impl Widget <TodoState>{
         .with_child(Label::new(|data: &TodoItem, _: &Env| data.text.clone()))
     }).lens(TodoState::todos);
 
-    Flex::column().with_child(header).with_child(todos)
+    Flex::column().with_child(header).with_child(todos)   // Создание столбца из задач (оформление задач в столбец)
 }
 
 fn main(){
     pub mod ui{}
     pub mod data{}
-    let main_window = WindowDesc::new(ui_builder())
+    let main_window = WindowDesc::new(ui_builder())  // Создадим главное окно
         .title ("ToDo App")
         .window_size((500., 600.));
-    AppLauncher::with_window(main_window)
+    AppLauncher::with_window(main_window)  // Происходит запуск приложения
         .launch(TodoState::default())
-        .expect("Faild to start")
+        .expect("Faild to start")  // Обработка ошибки
 }
 
 
