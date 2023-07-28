@@ -1,9 +1,12 @@
+use druid::MenuItem;
 use druid::Widget;
 use druid::widget::Label;
 use druid::WindowDesc;
 use druid::AppLauncher;
 use im::Vector;
 use druid::{Data, Lens};
+// use crate::data::TodoState as OtherTodoState;
+// use ui::ui_builder as other_ui_builder;
 use druid::widget::Flex;
 use druid::widget::Button;
 use druid::widget::TextBox;
@@ -11,6 +14,11 @@ use druid::WidgetExt;
 use druid::Env;
 use druid::widget::Checkbox;
 use druid::widget::List;
+use druid::EventCtx;
+use druid::menu;
+use crate::menu::Menu;
+use druid::Point;
+
 
 pub mod ui {
     pub use super::*;
@@ -37,11 +45,22 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
 
     let todos = List::new(|| {
         Flex::row()
-        .with_child(Checkbox::new("").lens(TodoItem::checked))
-        .with_child(Label::new(|data: &TodoItem, _: &Env| data.text.clone()))
-    }).lens(TodoState::todos);
+            .with_child(Checkbox::new("").lens(TodoItem::checked))
+            .with_child(Label::new(|data: &TodoItem, _: &Env| data.text.clone()))
+            .with_child(Button::new("Delete").on_click(|_ctx: &mut EventCtx, data: &mut TodoItem, _env|{
+                let data_clone = data.clone();
+                let menu: Menu<TodoState> = Menu::empty()
+                    .entry(MenuItem::new("Remove").on_activate(move|_, main_data: &mut TodoState, _| {
+                        let location = main_data.todos.index_of(&data_clone).unwrap();
+                        main_data.todos.remove(location);
+            }));
+               
+                _ctx.show_context_menu(menu, Point::new(0., 0.))
+            }))
+    
+    }).lens(TodoState::todos).scroll();   // Возможность пролистывать вниз/вверх
 
-    Flex::column().with_child(header).with_child(todos)   // Создание столбца из задач (оформление задач в столбец)
+    Flex::column().with_child(header).with_flex_child(todos, 1.)   // Создание столбца из задач (оформление задач в столбец)
 }
 
 fn main(){
@@ -62,7 +81,7 @@ pub struct TodoState{
     pub new_text: String,
 }
 
-#[derive(Clone, Data, Lens, Default)]
+#[derive(Clone, Data, Lens, Default, PartialEq)]
 pub struct TodoItem{
     pub checked: bool,
     pub text: String,
