@@ -5,8 +5,6 @@ use druid::WindowDesc;
 use druid::AppLauncher;
 use im::Vector;
 use druid::{Data, Lens};
-// use crate::data::TodoState as OtherTodoState;
-// use ui::ui_builder as other_ui_builder;
 use druid::widget::Flex;
 use druid::widget::Button;
 use druid::widget::TextBox;
