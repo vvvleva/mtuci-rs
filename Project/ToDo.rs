@@ -45,16 +45,18 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
     let todos = List::new(|| {
         Flex::row()
             .with_child(Checkbox::new("").lens(TodoItem::checked))
+            .with_default_spacer()
             .with_child(Label::new(|data: &TodoItem, _: &Env| data.text.clone()))
             .with_flex_spacer(0.1)
-            .with_child(Button::new("Delete").on_click(|_ctx: &mut EventCtx, data: &mut TodoItem, _env|{
+            .with_child(Button::new("...").on_click(|ctx: &mut EventCtx, data: &mut TodoItem, _env|{
                 let data_clone = data.clone();
                 let menu: Menu<TodoState> = Menu::empty()
                     .entry(MenuItem::new("Remove").on_activate(move|_, main_data: &mut TodoState, _| {
                         let location = main_data.todos.index_of(&data_clone).unwrap();
                         main_data.todos.remove(location);
             }));
-                _ctx.show_context_menu(menu, Point::new(0., 0.))
+               
+                ctx.show_context_menu(menu, Point::new(0., 0.))
             }))
     
     }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх
@@ -63,6 +65,7 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
         .on_click(|_, data: &mut TodoState, _| {
             data.todos.retain(|item| !item.checked)
         });
+
     ZStack::new(Flex::column().with_child(header).with_flex_child(todos, 1.)).with_aligned_child(clear_complete, UnitPoint::BOTTOM_RIGHT)  // Создание столбца из задач (оформление задач в столбец)
 }
 
