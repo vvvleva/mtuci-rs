@@ -1,4 +1,5 @@
 use druid::MenuItem;
+use druid::UnitPoint;
 use druid::Widget;
 use druid::widget::Label;
 use druid::WindowDesc;
@@ -16,7 +17,7 @@ use druid::EventCtx;
 use druid::menu;
 use crate::menu::Menu;
 use druid::Point;
-
+use druid::widget::ZStack;
 
 pub mod ui {
     pub use super::*;
@@ -45,6 +46,7 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
         Flex::row()
             .with_child(Checkbox::new("").lens(TodoItem::checked))
             .with_child(Label::new(|data: &TodoItem, _: &Env| data.text.clone()))
+            .with_flex_spacer(0.1)
             .with_child(Button::new("Delete").on_click(|_ctx: &mut EventCtx, data: &mut TodoItem, _env|{
                 let data_clone = data.clone();
                 let menu: Menu<TodoState> = Menu::empty()
@@ -52,13 +54,16 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
                         let location = main_data.todos.index_of(&data_clone).unwrap();
                         main_data.todos.remove(location);
             }));
-               
                 _ctx.show_context_menu(menu, Point::new(0., 0.))
             }))
     
-    }).lens(TodoState::todos).scroll();   // Возможность пролистывать вниз/вверх
+    }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх
 
-    Flex::column().with_child(header).with_flex_child(todos, 1.)   // Создание столбца из задач (оформление задач в столбец)
+    let clear_complete = Button::new("Clear Completed")
+        .on_click(|_, data: &mut TodoState, _| {
+            data.todos.retain(|item| !item.checked)
+        });
+    ZStack::new(Flex::column().with_child(header).with_flex_child(todos, 1.)).with_aligned_child(clear_complete, UnitPoint::BOTTOM_RIGHT)  // Создание столбца из задач (оформление задач в столбец)
 }
 
 fn main(){
