@@ -2,6 +2,8 @@ use directories::BaseDirs;
 use druid::MenuItem;
 use druid::UnitPoint;
 use druid::Widget;
+use druid::theme::BUTTON_DARK;
+use druid::theme::WINDOW_BACKGROUND_COLOR;
 use druid::widget::Label;
 use druid::WindowDesc;
 use druid::AppLauncher;
@@ -22,6 +24,11 @@ use druid::widget::ZStack;
 use druid::widget::Padding;
 use std::{path::Path, fs};
 use serde::{Serialize, Deserialize};
+use druid::widget::Controller;
+use druid::Event;
+use druid::Code;
+use druid::Color;
+use druid::theme::BUTTON_LIGHT;
 
 pub mod ui {
     pub use super::*;
@@ -39,7 +46,8 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
     let header = Flex::row()
     .with_flex_child(TextBox::new()
         .lens(TodoState::new_text)
-        .expand_width(), 1.)
+        .expand_width()
+        .controller( Enter{}),1.)
     .with_child(
         Button::new("->")
         .on_click(|_ctx, data: &mut TodoState, _env|{
@@ -52,6 +60,7 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
         .with_child(Saver {});
 
     let todos = List::new(|| {
+        let bg = Color::rgba8(139,147,244, 170);
         Flex::row()
             .with_child(Checkbox::new("").lens(TodoItem::checked))
             .with_default_spacer()
@@ -64,18 +73,31 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
                         let location = main_data.todos.index_of(&data_clone).unwrap();
                         main_data.todos.remove(location);
             }));
-               
                 ctx.show_context_menu(menu, Point::new(0., 0.))
-            }))
-    
-    }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх
+            })).background(bg)
+    }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх 
 
     let clear_complete = Button::new("Clear Completed")
         .on_click(|_, data: &mut TodoState, _| {
             data.todos.retain(|item| !item.checked)
         });
-
     ZStack::new(Flex::column().with_child(header).with_flex_child(todos, 1.)).with_aligned_child(Padding::new(5., clear_complete), UnitPoint::BOTTOM_RIGHT)  // Создание столбца из задач (оформление задач в столбец)
+}
+
+struct Enter;
+impl <W: Widget<TodoState>> Controller<TodoState, W> for Enter {
+    fn event(&mut self, child: &mut W, ctx: &mut EventCtx, event: &druid::Event, data: &mut TodoState, env: &Env) {
+        if let Event::KeyUp(key) = event {
+            if key.code == Code::Enter{
+                if data.new_text.trim() !=""{
+                    let text = data.new_text.clone();
+                    data.new_text = "". to_string();
+                    data.todos.push_front(TodoItem{ checked: false, text })
+                }
+            }
+        }
+        child.event(ctx, event, data, env)
+    }
 }
 
 fn main(){
@@ -92,6 +114,11 @@ let default_state = TodoState {
 };
 
     AppLauncher::with_window(main_window)  // Происходит запуск приложения
+        .configure_env(|env, _state|{
+            env.set(BUTTON_DARK, Color::rgba8(0,0,0,0));
+            env.set(BUTTON_LIGHT, Color::rgba8(100,90,140,160));           // Дизайн
+            env.set(WINDOW_BACKGROUND_COLOR, Color::rgba8(79,76,148,100))
+        })
         .launch(default_state)
         .expect("Faild to start")  // Обработка ошибки
 }
