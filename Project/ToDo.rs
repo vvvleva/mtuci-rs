@@ -1,3 +1,4 @@
+use directories::BaseDirs;
 use druid::MenuItem;
 use druid::UnitPoint;
 use druid::Widget;
@@ -19,12 +20,19 @@ use crate::menu::Menu;
 use druid::Point;
 use druid::widget::ZStack;
 use druid::widget::Padding;
+use std::{path::Path, fs};
+use serde::{Serialize, Deserialize};
+use saver::read_stored;
 
 pub mod ui {
     pub use super::*;
 }
 
 pub mod data {
+    pub use super::*;
+}
+
+pub mod server {
     pub use super::*;
 }
 
@@ -56,9 +64,9 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
                         let location = main_data.todos.index_of(&data_clone).unwrap();
                         main_data.todos.remove(location);
             }));
+               
                 ctx.show_context_menu(menu, Point::new(0., 0.))
             }))
-    
     }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх
 
     let clear_complete = Button::new("Clear Completed")
@@ -71,14 +79,20 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
 fn main(){
     pub mod ui{}
     pub mod data{}
+    pub mod saver{}
     let main_window = WindowDesc::new(ui_builder())  // Создадим главное окно
         .title ("ToDo App")
         .window_size((500., 600.));
+let stored = read_stored();
+let default_state = TodoState{
+    todos: Vector::from(stored.tasks),
+    ..Default::default()
+};
+
     AppLauncher::with_window(main_window)  // Происходит запуск приложения
         .launch(TodoState::default())
         .expect("Faild to start")  // Обработка ошибки
 }
-
 
 #[derive(Clone, Data, Lens, Default)]
 pub struct TodoState{
@@ -86,7 +100,55 @@ pub struct TodoState{
     pub new_text: String,
 }
 
-#[derive(Clone, Data, Lens, Default, PartialEq)]
+pub struct Saver;
+impl Widget<TodoState> for Saver {
+    fn event(&mut self, _ctx: &mut EventCtx, _event: &druid::Event, _data: &mut TodoState, _env: &Env) {
+    }
+    fn lifecycle(&mut self, _ctx: &mut druid::LifeCycleCtx, _event: &druid::LifeCycle, _data: &TodoState, _env: &Env) {
+    }
+    fn update(&mut self, _ctx: &mut druid::UpdateCtx, old_data: &TodoState, data: &TodoState, _env: &Env) {
+        if data.todos!= old_data.todos {
+            if let Some(base_dirs) = BaseDirs::new() {
+                let config = format!("{}/{}", base_dirs.config_dir().to_str().unwrap(), "Todo.json");
+                let config_path = Path::new(&config);
+                let tasks = TaskData {tasks: data.todos.clone().into_iter().collect()};
+                fs::write(config_path, serde_json::to_string(&tasks).unwrap()).expect("Config path does not fully exist");
+            }
+        }
+    }
+    fn layout(&mut self, _ctx: &mut druid::LayoutCtx, _bc: &druid::BoxConstraints, _data: &TodoState, _env: &Env) -> druid::Size {
+        druid::Size {width: 0., height: 0.}
+    }
+    fn paint(&mut self, _ctx: &mut druid::PaintCtx, _data: &TodoState, _env: &Env) {
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TaskData{
+    pub tasks: Vec<TodoItem>,
+}
+
+pub fn read_stored() -> TaskData {
+    if let Some(base_dirs) = BaseDirs::new() {
+        let config = format!("{}/{}", base_dirs.config_dir().to_str().unwrap(), "Todo.json");
+        let config_path = Path::new(&config);
+        let data = match fs::read_to_string(config_path) {
+            Ok(a) => a,
+            Err(_) => return  TaskData {tasks: Vec::new()},
+        };
+        match serde_json::from_str(&data) {
+            Ok(a) => a,
+            Err(e) => {
+                eprint!("The save data is corrupted or no longer in the format it should be in \nError {}", e);
+                return TaskData{tasks: Vec::new()};
+            },
+        }
+    } else {
+        return TaskData {tasks: Vec::new()};
+    }
+}
+
+#[derive(Clone, Data, Lens, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TodoItem{
     pub checked: bool,
     pub text: String,
