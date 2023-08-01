@@ -20,7 +20,6 @@ use crate::menu::Menu;
 use druid::Point;
 use druid::widget::ZStack;
 use druid::widget::Padding;
-// use std::default;
 use std::{path::Path, fs};
 use serde::{Serialize, Deserialize};
 
