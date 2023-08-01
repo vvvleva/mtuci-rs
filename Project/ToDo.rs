@@ -20,9 +20,9 @@ use crate::menu::Menu;
 use druid::Point;
 use druid::widget::ZStack;
 use druid::widget::Padding;
+// use std::default;
 use std::{path::Path, fs};
 use serde::{Serialize, Deserialize};
-use saver::read_stored;
 
 pub mod ui {
     pub use super::*;
@@ -49,7 +49,8 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
                 data.new_text = "". to_string();
                 data.todos.push_front(TodoItem{ checked: false, text })
             }
-        }));
+        }))
+        .with_child(Saver {});
 
     let todos = List::new(|| {
         Flex::row()
@@ -67,12 +68,14 @@ pub fn ui_builder() -> impl Widget <TodoState>{      // Функция возв�
                
                 ctx.show_context_menu(menu, Point::new(0., 0.))
             }))
+    
     }).lens(TodoState::todos).scroll().vertical();   // Возможность пролистывать вниз/вверх
 
     let clear_complete = Button::new("Clear Completed")
         .on_click(|_, data: &mut TodoState, _| {
             data.todos.retain(|item| !item.checked)
         });
+
     ZStack::new(Flex::column().with_child(header).with_flex_child(todos, 1.)).with_aligned_child(Padding::new(5., clear_complete), UnitPoint::BOTTOM_RIGHT)  // Создание столбца из задач (оформление задач в столбец)
 }
 
@@ -84,15 +87,16 @@ fn main(){
         .title ("ToDo App")
         .window_size((500., 600.));
 let stored = read_stored();
-let default_state = TodoState{
+let default_state = TodoState {
     todos: Vector::from(stored.tasks),
     ..Default::default()
 };
 
     AppLauncher::with_window(main_window)  // Происходит запуск приложения
-        .launch(TodoState::default())
+        .launch(default_state)
         .expect("Faild to start")  // Обработка ошибки
 }
+
 
 #[derive(Clone, Data, Lens, Default)]
 pub struct TodoState{
